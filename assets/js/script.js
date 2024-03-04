@@ -1,41 +1,104 @@
-const pianoKeys = document.querySelectorAll('.piano__keys .key');
-const audio = new Audio('assets/tunes/a.wav');
-const mapedKeys = [];
-const volumeSlider = document.querySelector('.volume input');
-const keysCheck = document.querySelector('.keys-check input');
+class Screen {
+  init() {
+    this.verifyScreenSize();
+    window.addEventListener('resize', () => this.verifyScreenSize());
+  }
 
-const playTune = (key) => {
-  audio.src = `assets/tunes/${key}.wav`;
-  audio.play();
-
-  const clickedKey = document.querySelector(`[data-key="${key}"]`);
-
-  clickedKey.classList.add('active');
-
-  setTimeout(() => {
-    clickedKey.classList.remove('active');
-  }, 1 * 150);
-};
-
-pianoKeys.forEach((key) => {
-  key.addEventListener('click', () => playTune(key.dataset.key));
-  mapedKeys.push(key.dataset.key);
-});
-
-document.addEventListener('keydown', (e) => {
-  if (mapedKeys.includes(e.key)) playTune(e.key);
-});
-
-const handleVolume = (e) => {
-  audio.volume = e.target.value;
-};
-
-const showHideKeys = () => {
-    pianoKeys.forEach((key) => {
-        key.classList.toggle('hide')
-    })
+  verifyScreenSize() {
+    if (window.innerHeight > window.innerWidth) {
+      document.body.classList.add('vertical');
+    } else {
+      document.body.classList.remove('vertical');
+    }
+  }
 }
 
-volumeSlider.addEventListener('input', handleVolume);
+class Piano {
+  constructor(audio, pianoKeys, mapedKeys, volumeSlider, keysCheck) {
+    this.audio = new Audio(audio);
+    this.pianoKeys = document.querySelectorAll(pianoKeys);
+    this.mapedKeys = mapedKeys;
+    this.volumeSlider = document.querySelector(volumeSlider);
+    this.keysCheck = document.querySelector(keysCheck);
+  }
 
-keysCheck.addEventListener('click', showHideKeys)
+  init() {
+    this.mappingPianoKeys(this.pianoKeys);
+    this.playingTheKeyboard();
+    this.volumeControl(this.volumeSlider);
+    this.showOrHideKeys();
+  }
+
+  mappingPianoKeys(keys) {
+    for (let i = 0; i < keys.length; i++) {
+      keys[i].addEventListener('click', () => {
+        this.playAudioOfKeyPresses(keys[i].dataset.key);
+      });
+
+      this.mapedKeys.push(keys[i].dataset.key);
+    }
+  }
+
+  playingTheKeyboard() {
+    document.addEventListener('keydown', (event) => {
+      if (this.mapedKeys.includes(event.key)) {
+        this.playAudioOfKeyPresses(event.key);
+      }
+    });
+  }
+
+  volumeControl(volumeSlider) {
+    volumeSlider.addEventListener('input', (event) => this.ChangeVolume(event));
+  }
+
+  showOrHideKeys() {
+    this.keysCheck.addEventListener('click', () => this.showHideKeys());
+  }
+
+  playAudioOfKeyPresses(key) {
+    const clickedKey = document.querySelector(`[data-key="${key}"]`);
+
+    this.addKeyPress(clickedKey);
+    this.playKeyAudio(key);
+    this.removeKeyPress(clickedKey);
+  }
+
+  playKeyAudio(key) {
+    this.audio.src = `assets/tunes/${key}.wav`;
+    this.audio.play();
+  }
+
+  addKeyPress(clickedKey) {
+    clickedKey.classList.add('active');
+  }
+
+  removeKeyPress(clickedKey) {
+    setTimeout(() => {
+      clickedKey.classList.remove('active');
+    }, 1 * 150);
+  }
+
+  ChangeVolume(event) {
+    this.audio.volume = event.target.value;
+  }
+
+  showHideKeys() {
+    for (let i = 0; i < this.pianoKeys.length; i++) {
+      this.pianoKeys[i].classList.toggle('hide');
+    }
+  }
+}
+
+const screen = new Screen();
+
+screen.init();
+
+const piano = new Piano(
+  'assets/tunes/a.wav',
+  '.piano__keys .key',
+  [],
+  '.volume input',
+  '.keys-check input'
+);
+
+piano.init();
